@@ -8,6 +8,8 @@
 import UIKit
 
 class MainVC: UITableViewController {
+    let cellHeight = 85
+    
     let restaurantNames = [
         "Burger Heroes", "Kitchen", "Bonsai", "Дастархан",
         "Индокитай", "XO", "Балкан Гриль", "Sherlock Holmes",
@@ -29,8 +31,11 @@ class MainVC: UITableViewController {
         let restaurantName = restaurantNames[indexPath.row]
         cell.imageView?.image = UIImage(named: restaurantName)
         cell.textLabel?.text = restaurantName
-        
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+         return CGFloat(cellHeight)
     }
 }
 
