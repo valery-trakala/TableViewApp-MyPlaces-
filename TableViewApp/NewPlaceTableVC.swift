@@ -8,82 +8,122 @@
 import UIKit
 
 class NewPlaceTableVC: UITableViewController {
-
+    var place: PlaceModel?
+    var imageIsChanged = false
+    
+    @IBOutlet weak var placeImage: UIImageView!
+    @IBOutlet weak var placeName: UITextField!
+    @IBOutlet weak var placeLocation: UITextField!
+    @IBOutlet weak var placeType: UITextField!
+    @IBOutlet weak var saveButton: UIBarButtonItem!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        tableView.tableFooterView = nil
+        saveButton.isEnabled = false
+        
+        placeName.addTarget(self, action: #selector(textFieldChange), for: .editingChanged)
     }
-
-    // MARK: - Table view data source
-
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
+    
+    @IBAction func cancelAction(_ sender: Any) {
+        dismiss(animated: true)
     }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard indexPath.row == 0 else {
+            view.endEditing(true)
+            return
+        }
+        
+        let alertVC = UIAlertController(
+            title: nil,
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+        
+        let cameraAction = UIAlertAction(title: "Camera", style: .default) { _ in
+            self.chooseImagePicker(source: .camera)
+        }
+        let cameraImage = UIImage(named: "camera")
+        cameraAction.setValue(cameraImage, forKey: "image")
+        cameraAction.setValue(CATextLayerAlignmentMode.left, forKey: "titleTextAlignment")
+        
+        let libraryAction = UIAlertAction(title: "Photo library", style: .default) { _ in
+            self.chooseImagePicker(source: .photoLibrary)
+        }
+        let libraryImage = UIImage(named: "library")
+        libraryAction.setValue(libraryImage, forKey: "image")
+        libraryAction.setValue(CATextLayerAlignmentMode.left, forKey: "titleTextAlignment")
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return 0
+        
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        alertVC.addAction(cameraAction)
+        alertVC.addAction(libraryAction)
+        alertVC.addAction(cancelAction)
+        
+        present(alertVC, animated: true)
+        
     }
-
-    /*
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
-
-        // Configure the cell...
-
-        return cell
-    }
-    */
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
+    
+}
+// MARK: TextField delegate
+extension NewPlaceTableVC: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
         return true
     }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+    
+    @objc private func textFieldChange() {
+        if placeName.text?.isEmpty == false {
+            saveButton.isEnabled = true
+        } else {
+            saveButton.isEnabled = false
+        }
     }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
+    
+    func savePlace() {
+        
+        var image: UIImage?
+        
+        if imageIsChanged {
+            image = placeImage.image
+        } else {
+            image = UIImage(named: "imagePlaceholder")
+        }
+        
+        place = PlaceModel(
+            image: image,
+            restarauntImage: nil,
+            name: placeName.text!,
+            location: placeLocation.text,
+            type: placeType.text
+        )
     }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
+}
+// MARK: ImagePicker
+extension NewPlaceTableVC: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func chooseImagePicker(source: UIImagePickerController.SourceType) {
+        guard UIImagePickerController.isSourceTypeAvailable(source) else { return }
+        
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        imagePicker.sourceType = source
+        imagePicker.allowsEditing = true
+        
+        present(imagePicker, animated: true)
     }
-    */
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+        placeImage.image = info[.editedImage] as? UIImage
+        placeImage.contentMode = .scaleAspectFill
+        placeImage.clipsToBounds = true
+        
+        imageIsChanged = true
+        
+        dismiss(animated: true)
     }
-    */
-
+    
 }
